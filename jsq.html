@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>表格计算器</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+
+        .calculator {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .display {
+            width: 100%;
+            height: 80px;
+            background-color: #222;
+            color: white;
+            font-size: 32px;
+            text-align: right;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        td {
+            width: 25%;
+            height: 80px;
+            text-align: center;
+            background-color: #f8f8f8;
+            border: 1px solid #ddd;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 28px;
+        }
+
+        td:hover {
+            background-color: #e0e0e0;
+        }
+
+        .operator {
+            background-color: #ff9500;
+            color: white;
+        }
+
+        .operator:hover {
+            background-color: #cc7a00;
+        }
+
+        .equals {
+            background-color: #34c759;
+            color: white;
+        }
+
+        .equals:hover {
+            background-color: #2da94f;
+        }
+
+        .clear {
+            background-color: #ff3b30;
+            color: white;
+        }
+
+        .clear:hover {
+            background-color: #cc0000;
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <div id="display" class="display">0</div>
+        
+        <table>
+            <tr>
+                <td class="clear" onclick="clearDisplay()">C</td>
+                <td onclick="backspace()">&larr;</td>
+                <td class="operator" onclick="appendOperator('/')">÷</td>
+                <td class="operator" onclick="appendOperator('*')">×</td>
+            </tr>
+            <tr>
+                <td onclick="appendNumber(7)">7</td>
+                <td onclick="appendNumber(8)">8</td>
+                <td onclick="appendNumber(9)">9</td>
+                <td class="operator" onclick="appendOperator('-')">-</td>
+            </tr>
+            <tr>
+                <td onclick="appendNumber(4)">4</td>
+                <td onclick="appendNumber(5)">5</td>
+                <td onclick="appendNumber(6)">6</td>
+                <td class="operator" onclick="appendOperator('+')">+</td>
+            </tr>
+            <tr>
+                <td onclick="appendNumber(1)">1</td>
+                <td onclick="appendNumber(2)">2</td>
+                <td onclick="appendNumber(3)">3</td>
+                <td class="equals" onclick="calculateResult()">=</td>
+            </tr>
+            <tr>
+                <td colspan="2" onclick="appendNumber(0)">0</td>
+                <td onclick="appendDecimal()">.</td>
+                <td class="operator" onclick="appendOperator(' ')">±</td>
+            </tr>
+        </table>
+    </div>
+
+    <script>
+        let display = document.getElementById('display');
+        let currentInput = '';
+        let operator = '';
+        let previousInput = '';
+
+        function appendNumber(number) {
+            if (currentInput.length < 16) { // 限制输入长度
+                currentInput += number.toString();
+                updateDisplay();
+            }
+        }
+
+        function appendOperator(op) {
+            if (currentInput === '' && previousInput === '') return;
+            if (currentInput === '' && previousInput !== '') {
+                operator = op;
+                return;
+            }
+            operator = op;
+            previousInput = currentInput;
+            currentInput = '';
+            updateDisplay();
+        }
+
+        function appendDecimal() {
+            if (!currentInput.includes('.')) {
+                currentInput += '.';
+                updateDisplay();
+            }
+        }
+
+        function clearDisplay() {
+            currentInput = '';
+            previousInput = '';
+            operator = '';
+            updateDisplay();
+        }
+
+        function backspace() {
+            currentInput = currentInput.slice(0, -1);
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            display.textContent = currentInput || '0';
+        }
+
+        function calculateResult() {
+            try {
+                let result;
+                let a = parseFloat(previousInput);
+                let b = parseFloat(currentInput);
+
+                switch(operator) {
+                    case '+':
+                        result = a + b;
+                        break;
+                    case '-':
+                        result = a - b;
+                        break;
+                    case '*':
+                        result = a * b;
+                        break;
+                    case '/':
+                        result = a / b;
+                        break;
+                    default:
+                        return;
+                }
+
+                currentInput = result.toString();
+                operator = '';
+                previousInput = '';
+                updateDisplay();
+            } catch (error) {
+                clearDisplay();
+            }
+        }
+    </script>
+</body>
+</html>
