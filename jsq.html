@@ -2,73 +2,197 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>卡通计算器</title>
+    <title>绘里主题计算器</title>
     <style>
-        body {
+        * {
             margin: 0;
-            min-height: 100vh;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
             display: flex;
             justify-content: center;
             align-items: center;
-            background: url('小女孩.png') center/cover; /* 请确保图片名称正确 */
-            filter: blur(5px);
-        }
-
-        .calculator-container {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 0 30px rgba(0,0,0,0.2);
-            transform: scale(0.9);
-            transition: transform 0.3s ease;
+            min-height: 100vh;
+            background: url('绘里.png') center/cover;
+            filter: blur(8px);
         }
 
         .calculator {
-            background: #fff;
-            padding: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 30px rgba(0,0,0,0.1);
+            transform: translateY(-20px);
+        }
+
+        .display {
+            width: 100%;
+            height: 70px;
+            background: linear-gradient(135deg, #fdfdfd 0%, #f5f5f5 100%);
             border-radius: 10px;
+            margin-bottom: 20px;
+            padding: 15px;
+            font-family: 'Segoe UI', system-ui;
+            font-size: 32px;
+            color: #333;
+            text-align: right;
+            overflow-x: auto;
         }
 
-        /* 其他样式保持与之前版本一致 */
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
         td {
-            width: 25%;
-            height: 80px;
+            width: 24%;
+            height: 65px;
             text-align: center;
-            background-color: #f8f8f8;
-            border: 1px solid #ddd;
-            cursor: pointer;
-            transition: all 0.2s;
             font-size: 28px;
+            border-radius: 8px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
         }
 
-        /* 运算符颜色设置 */
-        .operator { background-color: #ff9500; }
-        .equals { background-color: #34c759; }
-        .clear { background-color: #ff3b30; }
+        .number {
+            background: rgba(245, 245, 245, 0.9);
+            color: #333;
+        }
+
+        .operator {
+            background: #f0f0f0;
+            color: #666;
+        }
+
+        .equal {
+            background: #40c4ff;
+            color: white;
+        }
+
+        td:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+        }
+
+        .equal:hover {
+            background: #36a3f7;
+        }
+
+        .operator:hover {
+            background: #e0e0e0;
+        }
     </style>
 </head>
 <body>
-    <div class="calculator-container">
-        <div class="calculator">
-            <div id="display" class="display">0</div>
-            <table>
-                <!-- 计算器按钮布局保持不变 -->
-                <tr>
-                    <td class="clear" onclick="clearDisplay()">C</td>
-                    <td onclick="backspace()">&larr;</td>
-                    <td class="operator" onclick="appendOperator('/')">÷</td>
-                    <td class="operator" onclick="appendOperator('*')">×</td>
-                </tr>
-                <!-- 其余行保持相同结构 -->
-            </table>
-        </div>
+    <div class="calculator">
+        <div id="display" class="display">0</div>
+        <table>
+            <tr>
+                <td class="operator" onclick="clearDisplay()">C</td>
+                <td onclick="backspace()">⌫</td>
+                <td class="operator" onclick="appendOperator('/')">÷</td>
+                <td class="operator" onclick="appendOperator('*')">×</td>
+            </tr>
+            <tr>
+                <td onclick="appendNumber(7)">7</td>
+                <td onclick="appendNumber(8)">8</td>
+                <td onclick="appendNumber(9)">9</td>
+                <td class="operator" onclick="appendOperator('-')">-</td>
+            </tr>
+            <tr>
+                <td onclick="appendNumber(4)">4</td>
+                <td onclick="appendNumber(5)">5</td>
+                <td onclick="appendNumber(6)">6</td>
+                <td class="operator" onclick="appendOperator('+')">+</td>
+            </tr>
+            <tr>
+                <td onclick="appendNumber(1)">1</td>
+                <td onclick="appendNumber(2)">2</td>
+                <td onclick="appendNumber(3)">3</td>
+                <td class="equal" onclick="calculateResult()">=</td>
+            </tr>
+            <tr>
+                <td colspan="2" onclick="appendNumber(0)">0</td>
+                <td onclick="appendDecimal()">.</td>
+                <td class="operator" onclick="toggleSign()">±</td>
+            </tr>
+        </table>
     </div>
 
     <script>
-        // 保持原有JavaScript代码不变
         let display = document.getElementById('display');
-        // ...（其余函数保持不变）
+        let currentInput = '';
+        let operator = '';
+        let previousInput = '';
+
+        function appendNumber(number) {
+            if (currentInput.length < 16) {
+                currentInput += number.toString();
+                updateDisplay();
+            }
+        }
+
+        function appendOperator(op) {
+            if (currentInput === '' && previousInput === '') return;
+            operator = op;
+            previousInput = currentInput;
+            currentInput = '';
+            updateDisplay();
+        }
+
+        function appendDecimal() {
+            if (!currentInput.includes('.')) {
+                currentInput += '.';
+                updateDisplay();
+            }
+        }
+
+        function clearDisplay() {
+            currentInput = '';
+            previousInput = '';
+            operator = '';
+            updateDisplay();
+        }
+
+        function backspace() {
+            currentInput = currentInput.slice(0, -1);
+            updateDisplay();
+        }
+
+        function toggleSign() {
+            currentInput = currentInput.startsWith('-') 
+                ? currentInput.replace('-', '') 
+                : `-${currentInput}`;
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            display.textContent = currentInput || '0';
+        }
+
+        function calculateResult() {
+            try {
+                let a = parseFloat(previousInput);
+                let b = parseFloat(currentInput);
+                
+                const ops = {
+                    '+': (a,b) => a + b,
+                    '-': (a,b) => a - b,
+                    '*': (a,b) => a * b,
+                    '/': (a,b) => a / b || 'Error'
+                };
+
+                currentInput = String(ops[operator](a, b)).slice(0, 16);
+                operator = '';
+                previousInput = '';
+                updateDisplay();
+            } catch (error) {
+                clearDisplay();
+            }
+        }
     </script>
 </body>
 </html>
