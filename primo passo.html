@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>音乐播放器</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="player">
+        <h2 id="songTitle">正在播放：yy20.mid</h2>
+        <button id="playPause">播放</button>
+        <button id="prev">上一首</button>
+        <button id="next">下一首</button>
+        <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="0.5">
+        <audio id="audioPlayer" src="yy20.mid"></audio>
+    </div>
+    <script src="script.js"></script>
+</body>
+
+</html>
