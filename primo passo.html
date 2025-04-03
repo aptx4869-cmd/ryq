@@ -6,73 +6,77 @@
     <style>
         body {
             margin: 0;
-            padding: 0;
-            min-height: 100vh;
-            background-image: url('金色琴弦.jpg');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
+            height: 100vh;
+            background: url('金色琴弦.jpg') fixed no-repeat center/cover;
             display: flex;
             justify-content: center;
             align-items: flex-end;
-            font-family: Arial, sans-serif;
+            font-family: "Microsoft Yahei", sans-serif;
         }
 
-        .player-container {
-            background: rgba(255, 255, 255, 0.8);
-            padding: 20px;
-            border-radius: 15px;
-            margin-bottom: 50px;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(5px);
+        .player-box {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 25px;
+            border-radius: 20px;
+            margin-bottom: 80px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            text-align: center;
         }
 
-        audio {
+        #midiPlayer {
             width: 300px;
-            margin: 10px 0;
+            height: 50px;
+            margin: 15px 0;
         }
 
-        .controls {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-        }
-
-        button {
-            padding: 10px 20px;
+        .gold-button {
+            padding: 12px 25px;
+            background: linear-gradient(45deg, #D4AF37, #B08F26);
             border: none;
-            border-radius: 5px;
-            background: #D4AF37;
+            border-radius: 25px;
             color: white;
             cursor: pointer;
-            transition: 0.3s;
+            transition: transform 0.2s;
+            margin: 0 5px;
         }
 
-        button:hover {
-            background: #B08F26;
+        .gold-button:hover {
+            transform: scale(1.05);
         }
     </style>
 </head>
 <body>
-    <div class="player-container">
-        <audio id="audioPlayer" controls>
-            <source src="yy20.mid" type="audio/midi">
-            您的浏览器不支持音频播放
-        </audio>
-        <div class="controls">
-            <button onclick="document.getElementById('audioPlayer').play()">播放</button>
-            <button onclick="document.getElementById('audioPlayer').pause()">暂停</button>
-            <button onclick="document.getElementById('audioPlayer').volume -= 0.1">减小音量</button>
-            <button onclick="document.getElementById('audioPlayer').volume += 0.1">增大音量</button>
-        </div>
+    <div class="player-box">
+        <div id="midiPlayer"></div>
+        <button class="gold-button" onclick="playMIDI()">▶ 播放</button>
+        <button class="gold-button" onclick="pauseMIDI()">⏸ 暂停</button>
     </div>
 
+    <!-- 使用MIDI.js库解决兼容性问题 -->
+    <script src="https://cdn.jsdelivr.net/npm/@magenta/music@1.22.0/es6/core.js"></script>
     <script>
-        // 自动调整播放器尺寸
-        window.addEventListener('resize', function() {
-            const player = document.getElementById('audioPlayer');
-            player.style.width = window.innerWidth > 600 ? '400px' : '80%';
-        });
+        let player = null;
+
+        async function initializePlayer() {
+            player = new mm.SoundFontPlayer('https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus');
+            await player.loadMIDI('yy20.mid');
+        }
+
+        function playMIDI() {
+            if (player) {
+                player.start();
+            }
+        }
+
+        function pauseMIDI() {
+            if (player) {
+                player.stop();
+            }
+        }
+
+        // 初始化播放器
+        window.addEventListener('load', initializePlayer);
     </script>
 </body>
 </html>
