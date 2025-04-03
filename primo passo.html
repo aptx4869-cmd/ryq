@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>金色琴弦音乐播放器</title>
+    <title>Primo passo</title>
     <style>
         body {
             margin: 0;
@@ -15,18 +15,17 @@
         }
 
         .player-box {
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.95);
             padding: 25px;
             border-radius: 20px;
             margin-bottom: 80px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
             backdrop-filter: blur(10px);
-            text-align: center;
+            width: 350px;
         }
 
-        #midiPlayer {
-            width: 300px;
-            height: 50px;
+        audio {
+            width: 100%;
             margin: 15px 0;
         }
 
@@ -37,46 +36,47 @@
             border-radius: 25px;
             color: white;
             cursor: pointer;
-            transition: transform 0.2s;
-            margin: 0 5px;
+            transition: all 0.3s;
+            margin: 5px;
         }
 
         .gold-button:hover {
             transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(216, 175, 55, 0.5);
         }
     </style>
 </head>
 <body>
     <div class="player-box">
-        <div id="midiPlayer"></div>
-        <button class="gold-button" onclick="playMIDI()">▶ 播放</button>
-        <button class="gold-button" onclick="pauseMIDI()">⏸ 暂停</button>
+        <audio controls id="audioPlayer">
+            <source src="yy20.mp3" type="audio/mpeg">
+            您的浏览器不支持音频播放
+        </audio>
+        <div style="text-align: center;">
+            <button class="gold-button" onclick="document.getElementById('audioPlayer').play()">
+                ▶ 播放
+            </button>
+            <button class="gold-button" onclick="document.getElementById('audioPlayer').pause()">
+                ⏸ 暂停
+            </button>
+            <button class="gold-button" onclick="document.getElementById('audioPlayer').volume += 0.1">
+                🔈 增
+            </button>
+            <button class="gold-button" onclick="document.getElementById('audioPlayer').volume -= 0.1">
+                🔉 减
+            </button>
+        </div>
     </div>
 
-    <!-- 使用MIDI.js库解决兼容性问题 -->
-    <script src="https://cdn.jsdelivr.net/npm/@magenta/music@1.22.0/es6/core.js"></script>
     <script>
-        let player = null;
+        // 自动音量保护（0-1之间）
+        const audio = document.getElementById('audioPlayer');
+        audio.volume = 0.5;  // 初始音量设为50%
 
-        async function initializePlayer() {
-            player = new mm.SoundFontPlayer('https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus');
-            await player.loadMIDI('yy20.mid');
-        }
-
-        function playMIDI() {
-            if (player) {
-                player.start();
-            }
-        }
-
-        function pauseMIDI() {
-            if (player) {
-                player.stop();
-            }
-        }
-
-        // 初始化播放器
-        window.addEventListener('load', initializePlayer);
+        audio.addEventListener('volumechange', () => {
+            if (audio.volume > 1) audio.volume = 1;
+            if (audio.volume < 0) audio.volume = 0;
+        });
     </script>
 </body>
 </html>
