@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>豆瓣图书Top100分析报告</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    
+    <!-- 配置Tailwind主题 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1a73e8',
+                        secondary: '#4285f4',
+                        accent: '#fbbc05',
+                        neutral: '#f8f9fa',
+                        dark: '#202124'
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .card-shadow {
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            }
+            .section-title {
+                @apply text-2xl font-bold text-primary mb-4 flex items-center;
+            }
+            .stat-card {
+                @apply bg-white rounded-xl p-6 transition-all duration-300 hover:shadow-lg;
+            }
+            .nav-link {
+                @apply text-gray-700 hover:text-primary px-4 py-2 transition-colors duration-200;
+            }
+            .btn-primary {
+                @apply bg-primary text-white px-5 py-2 rounded-lg shadow-md hover:bg-primary/90 transition-all duration-200 transform hover:-translate-y-0.5;
+            }
+            .btn-outline {
+                @apply border border-primary text-primary px-5 py-2 rounded-lg hover:bg-primary/5 transition-all duration-200;
+            }
+            .scroll-indicator {
+                @apply fixed top-0 left-0 h-1 bg-primary z-50 transition-all duration-100;
+            }
+            .highlight {
+                @apply bg-yellow-100 px-1 py-0.5 rounded;
+            }
+        }
+    </style>
+</head>
+<body class="font-inter bg-gray-50 text-gray-800">
+    <!-- 滚动进度指示器 -->
+    <div id="scrollIndicator" class="scroll-indicator"></div>
+    
+    <!-- 导航栏 -->
+    <nav class="fixed top-0 left-0 right-0 bg-white shadow-sm z-40 transition-all duration-300" id="mainNav">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <a href="#" class="flex items-center">
+                        <i class="fa fa-book text-primary text-2xl mr-2"></i>
+                        <span class="text-xl font-bold text-dark">豆瓣图书分析</span>
+                    </a>
+                </div>
+                
+                <!-- 桌面导航 -->
+                <div class="hidden md:block">
+                    <div class="flex space-x-1">
+                        <a href="#year" class="nav-link">出版年份</a>
+                        <a href="#author" class="nav-link">作者分布</a>
+                        <a href="#price" class="nav-link">价格分析</a>
+                        <a href="#comments" class="nav-link">评论热度</a>
+                        <a href="#rating" class="nav-link">评分分布</a>
+                        <a href="#correlation" class="nav-link">相关性</a>
+                        <a href="#conclusion" class="nav-link">结论建议</a>
+                    </div>
+                </div>
+                
+                <!-- 移动端菜单按钮 -->
+                <div class="md:hidden">
+                    <button id="menuToggle" class="text-gray-700 hover:text-primary">
+                        <i class="fa fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 移动端导航菜单 -->
+        <div id="mobileMenu" class="hidden md:hidden bg-white shadow-lg">
+            <div class="px-2 pt-2 pb-3 space-y-1">
+                <a href="#year" class="block px-3 py-2 rounded-md text-base font-medium nav-link">出版年份</a>
+                <a href="#author" class="block px-3 py-2 rounded-md text-base font-medium nav-link">作者分布</a>
+                <a href="#price" class="block px-3 py-2 rounded-md text-base font-medium nav-link">价格分析</a>
+                <a href="#comments" class="block px-3 py-2 rounded-md text-base font-medium nav-link">评论热度</a>
+                <a href="#rating" class="block px-3 py-2 rounded-md text-base font-medium nav-link">评分分布</a>
+                <a href="#correlation" class="block px-3 py-2 rounded-md text-base font-medium nav-link">相关性</a>
+                <a href="#conclusion" class="block px-3 py-2 rounded-md text-base font-medium nav-link">结论建议</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 英雄区 -->
+    <header class="pt-24 pb-12 md:pt-32 md:pb-20 bg-gradient-to-br from-primary/5 to-secondary/5">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="max-w-4xl mx-auto text-center">
+                <h1 class="text-[clamp(2rem,5vw,3.5rem)] font-bold text-dark leading-tight mb-6">
+                    豆瓣图书Top100<br><span class="text-primary">数据分析报告</span>
+                </h1>
+                <p class="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
+                    基于豆瓣高评分图书的深度分析，揭示出版趋势、作者影响力与用户偏好
+                </p>
+                <div class="flex flex-col sm:flex-row justify-center gap-4">
+                    <a href="#year" class="btn-primary">
+                        <i class="fa fa-bar-chart mr-2"></i>查看分析
+                    </a>
+                    <a href="#conclusion" class="btn-primary">
+                        <i class="fa fa-lightbulb-o mr-2"></i>获取建议
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主要内容区 -->
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <!-- 数据概览卡片 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+            <div class="stat-card border-l-4 border-primary">
+                <div class="flex items-center">
+                    <div class="bg-primary/10 p-3 rounded-lg mr-4">
+                        <i class="fa fa-book text-primary text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-medium text-gray-500">分析图书</h3>
+                        <p class="text-2xl font-bold text-dark">100本</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stat-card border-l-4 border-accent">
+                <div class="flex items-center">
+                    <div class="bg-accent/10 p-3 rounded-lg mr-4">
+                        <i class="fa fa-user text-accent text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-medium text-gray-500">作者数量</h3>
+                        <p class="text-2xl font-bold text-dark">87位</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stat-card border-l-4 border-green-500">
+                <div class="flex items-center">
+                    <div class="bg-green-500/10 p-3 rounded-lg mr-4">
+                        <i class="fa fa-star text-green-500 text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-medium text-gray-500">平均评分</h3>
+                        <p class="text-2xl font-bold text-dark">9.1分</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stat-card border-l-4 border-purple-500">
+                <div class="flex items-center">
+                    <div class="bg-purple-500/10 p-3 rounded-lg mr-4">
+                        <i class="fa fa-calendar text-purple-500 text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-medium text-gray-500">出版跨度</h3>
+                        <p class="text-2xl font-bold text-dark">1920-2023</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 第一部分：出版年份分布 -->
+        <section id="year" class="mb-16 scroll-mt-24">
+            <div class="section-title">
+                <i class="fa fa-line-chart mr-3 text-xl"></i>
+                <span>出版年份分布</span>
+            </div>
+            
+            <div class="bg-white rounded-xl p-6 md:p-8 card-shadow">
+                <div class="image-container mb-6">
+                    <img src="https://raw.githubusercontent.com/aptx4869-cmd/ryq/79e6615f757e887744f7dece6b31e4708bf69f5a/outputshuliang.png" 
+                         alt="不同出版年份的图书数量" class="rounded-lg">
+                </div>
+                
+                <div class="prose max-w-none">
+                    <p class="text-gray-700 mb-4">从图中可看出：</p>
+                    <ul class="list-disc pl-5 text-gray-700 space-y-2 mb-6">
+                        <li>早期（1970-1980年）出版数量呈下滑趋势</li>
+                        <li>中期（1980-2010年）波动上升，2012年左右达峰值（9本）</li>
+                        <li>1980-1990年多次出现仅1本的低谷</li>
+                        <li>近期（2010年后）先高后降，2020年后明显减少</li>
+                    </ul>
+                    
+                    <p class="text-gray-700">数据价值：辅助出版选题规划，验证数据质量，结合类型维度可分析用户对经典老书的偏好。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 第二部分：作者分布 -->
+        <section id="author" class="mb-16 scroll-mt-24">
+            <div class="section-title">
+                <i class="fa fa-users mr-3 text-xl"></i>
+                <span>作者出现频次Top5</span>
+            </div>
+            
+            <div class="bg-white rounded-xl p-6 md:p-8 card-shadow">
+                <div class="image-container mb-6">
+                    <img src="https://raw.githubusercontent.com/aptx4869-cmd/ryq/79e6615f757e887744f7dece6b31e4708bf69f5a/top5_author_histogram.png" 
+                         alt="作者出现频次前5名直方图" class="rounded-lg">
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-4">
+                        <div class="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-500">
+                            <h4 class="font-bold text-blue-700 flex items-center">
+                                <span class="bg-blue-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm mr-2">1</span>
+                                鲁迅（5次）
+                            </h4>
+                            <ul class="list-disc pl-5 mt-2 text-sm">
+                                <li>《野草》·评分：9.5（总排名7）</li>
+                                <li>《故事新编》·评分：9.5（总排名10）</li>
+                                <li>《彷徨》·评分：9.3（总排名22）</li>
+                                <li>《呐喊》·评分：9.2（总排名35）</li>
+                                <li>《朝花夕拾》·评分：9.1（总排名63）</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-indigo-50 p-4 rounded-lg border-l-4 border-indigo-500">
+                            <h4 class="font-bold text-indigo-700 flex items-center">
+                                <span class="bg-indigo-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm mr-2">2</span>
+                                金庸（4次）
+                            </h4>
+                            <ul class="list-disc pl-5 mt-2 text-sm">
+                                <li>《天龙八部》·评分：9.2（总排名31）</li>
+                                <li>《笑傲江湖》·评分：9.1（总排名60）</li>
+                                <li>《射雕英雄传》·评分：9.1（总排名72）</li>
+                                <li>《神雕侠侣》·评分：8.9（总排名94）</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="bg-purple-50 p-4 rounded-lg border-l-4 border-purple-500">
+                            <h4 class="font-bold text-purple-700 flex items-center">
+                                <span class="bg-purple-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm mr-2">3</span>
+                                埃莱娜·费兰特（3次）
+                            </h4>
+                            <ul class="list-disc pl-5 mt-2 text-sm">
+                                <li>《失踪的孩子》·评分：9.2（总排名33）</li>
+                                <li>《新名字的故事》·评分：9.2（总排名45）</li>
+                                <li>《离开的，留下的》·评分：8.9（总排名100）</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-green-50 p-4 rounded-lg border-l-4 border-green-500">
+                            <h4 class="font-bold text-green-700 flex items-center">
+                                <span class="bg-green-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm mr-2">4</span>
+                                彼得·海斯勒（2次）
+                            </h4>
+                            <ul class="list-disc pl-5 mt-2 text-sm">
+                                <li>《江城》·评分：9.1（总排名61）</li>
+                                <li>《寻路中国》·评分：9.0（总排名82）</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-yellow-50 p-4 rounded-lg border-l-4 border-yellow-500">
+                            <h4 class="font-bold text-yellow-700 flex items-center">
+                                <span class="bg-yellow-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm mr-2">5</span>
+                                余华（2次）
+                            </h4>
+                            <ul class="list-disc pl-5 mt-2 text-sm">
+                                <li>《活着》·评分：9.4（总排名14）</li>
+                                <li>《许三观卖血记》·评分：9.2（总排名42）</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 第三部分：价格分布 -->
+        <section id="price" class="mb-16 scroll-mt-24">
+            <div class="section-title">
+                <i class="fa fa-money mr-3 text-xl"></i>
+                <span>价格分布特征</span>
+            </div>
+            
+            <div class="bg-white rounded-xl p-6 md:p-8 card-shadow">
+                <div class="image-container mb-6">
+                    <img src="https://raw.githubusercontent.com/aptx4869-cmd/ryq/79e6615f757e887744f7dece6b31e4708bf69f5a/price_xiangxian.png" 
+                         alt="价格箱线图" class="rounded-lg">
+                </div>
+                
+                <div class="prose max-w-none">
+                    <p class="text-gray-700 mb-4">箱线图特征分析：</p>
+                    <ul class="list-disc pl-5 text-gray-700 space-y-2 mb-6">
+                        <li>箱体（IQR，四分位距）短，表明定价主要集中在较低区间</li>
+                        <li>whisker（须）长且有多个离群点（高价异常值），说明高价书使数据尾部拉长，整体呈右偏分布</li>
+                        <li>中位数36.5元，反映整体定价偏亲民，但均值58.3元被高价书拉高</li>
+                        <li>标准差42.7元，显示定价差异较大，高价书是影响数据分布的关键因素</li>
+                    </ul>
+                    
+                    <div class="bg-gray-50 p-4 rounded-lg mt-6">
+                        <h4 class="font-bold text-gray-800 mb-2">价格区间统计</h4>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-primary">36.5</div>
+                                <div class="text-sm text-gray-500">中位数(元)</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-primary">58.3</div>
+                                <div class="text-sm text-gray-500">均值(元)</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-primary">12.5</div>
+                                <div class="text-sm text-gray-500">最小值(元)</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-primary">598.0</div>
+                                <div class="text-sm text-gray-500">最大值(元)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 第四部分：评论数分析 -->
+        <section id="comments" class="mb-16 scroll-mt-24">
+            <div class="section-title">
+                <i class="fa fa-comments mr-3 text-xl"></i>
+                <span>评论数Top10图书</span>
+            </div>
+            
+            <div class="bg-white rounded-xl p-6 md:p-8 card-shadow">
+                <div class="image-container mb-6">
+                    <img src="https://raw.githubusercontent.com/aptx4869-cmd/ryq/79e6615f757e887744f7dece6b31e4708bf69f5a/pinglun_top10.png" 
+                         alt="评论数最多的10本图书" class="rounded-lg">
+                </div>
+                
+                <div class="prose max-w-none">
+                    <p class="text-gray-700 mb-4">从评论数分布可推测：</p>
+                    <ul class="list-disc pl-5 text-gray-700 space-y-2 mb-6">
+                        <li>经典畅销书（如《活着》《围城》）评论数普遍较高</li>
+                        <li>热门IP作品（如《三体》《小王子》）尽管评分非顶级，但受众广泛，评论数多</li>
+                        <li>评论数与书籍传播度、受众基数呈正相关，与定价可能存在负相关（后续分析）</li>
+                    </ul>
+                    
+                    <div class="overflow-x-auto mt-6">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">排名</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">书名</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">评分</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">评论数(万)</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">价格(元)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">1</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">活着</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">9.4</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">86.2</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">32.0</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">2</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">围城</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">9.3</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">78.5</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">39.5</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">3</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">三体</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">9.3</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">65.3</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">89.0</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">4</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">小王子</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">9.1</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">59.7</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">22.0</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">5</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">平凡的世界</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">9.0</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">52.1</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">88.0</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 第五部分：评分分布 -->
+        <section id="rating" class="mb-16 scroll-mt-24">
+            <div class="section-title">
+                <i class="fa fa-star mr-3 text-xl"></i>
+                <span>评分分布特征</span>
+            </div>
+            
+            <div class="bg-white rounded-xl p-6 md:p-8 card-shadow">
+                <div class="image-container mb-6">
+                    <img src="https://raw.githubusercontent.com/aptx4869-cmd/ryq/79e6615f757e887744f7dece6b31e4708bf69f5a/pingfen.png" 
+                         alt="评分分布图" class="rounded-lg">
+                </div>
+                
+                <div class="prose max-w-none">
+                    <p class="text-gray-700 mb-4">评分分布解读：</p>
+                    <ul class="list-disc pl-5 text-gray-700 space-y-2 mb-6">
+                        <li>涵盖领域广泛：经典名著（《红楼梦》《诗经》）、文学巨著（《卡拉马佐夫兄弟》）、社科/历史（《史记》《毛泽东选集》）、科幻（《三体》）、艺术（《艺术的故事》）等</li>
+                        <li>豆瓣高分书不局限于单一类型，不同领域的顶尖作品均能获得高认可度</li>
+                        <li>整体质量高：评分集中在9.0-9.3分，但顶级高分书（9.5+）稀缺，竞争集中在经典名著、热门IP等领域</li>
+                        <li>评分分布的单峰形态和低离散度，反映用户对 “优质书” 的评分标准相对一致，但对 “顶尖作品” 的评价更具差异性（长尾分布）</li>
+                    </ul>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <h4 class="font-bold text-blue-700 mb-2">评分区间分布</h4>
+                            <div class="space-y-2">
+                                <div class="flex justify-between">
+                                    <span class="text-sm">9.5分以上</span>
+                                    <span class="text-sm font-medium">8本 (8%)</span>
+                                </div>
+                                <div class="w-full bg-blue-200 rounded-full h-2">
+                                    <div class="bg-blue-600 h-2 rounded-full" style="width: 8%"></div>
+                                </div>
+                                
+                                <div class="flex justify-between mt-3">
+                                    <span class="text-sm">9.0-9.4分</span>
+                                    <span class="text-sm font-medium">72本 (72%)</span>
+                                </div>
+                                <div class="w-full bg-blue-200 rounded-full h-2">
+                                    <div class="bg-blue-600 h-2 rounded-full" style="width: 72%"></div>
+                                </div>
+                                
+                                <div class="flex justify-between mt-3">
+                                    <span class="text-sm">8.5-8.9分</span>
+                                    <span class="text-sm font-medium">20本 (20%)</span>
+                                </div>
+                                <div class="w-full bg-blue-200 rounded-full h-2">
+                                    <div class="bg-blue-600 h-2 rounded-full" style="width: 20%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <h4 class="font-bold text-green-700 mb-2">类型评分对比</h4>
+                            <div class="space-y-2">
+                                <div class="flex justify-between">
+                                    <span class="text-sm">文学</span>
+                                    <span class="text-sm font-medium">9.21分</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-sm">社科</span>
+                                    <span class="text-sm font-medium">9.18分</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-sm">历史</span>
+                                    <span class="text-sm font-medium">9.25分</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-sm">科幻</span>
+                                    <span class="text-sm font-medium">9.12分</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-sm">艺术</span>
+                                    <span class="text-sm font-medium">9.30分</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-purple-50 p-4 rounded-lg">
+                            <h4 class="font-bold text-purple-700 mb-2">评分统计</h4>
+                            <div class="space-y-2">
+                                <div class="flex justify-between">
+                                    <span class="text-sm">最高分</span>
+                                    <span class="text-sm font-medium">9.7分</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-sm">最低分</span>
+                                    <span class="text-sm font-medium">8.5分</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-sm">平均分</span>
+                                    <span class="text-sm font-medium">9.15分</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-sm">中位数</span>
+                                    <span class="text-sm font-medium">9.2分</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-sm">标准差</span>
+                                    <span class="text-sm font-medium">0.23</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 第六部分：价格与评论数关系 -->
+        <section id="correlation" class="mb-16 scroll-mt-24">
+            <div class="section-title">
+                <i class="fa fa-link mr-3 text-xl"></i>
+                <span>价格、评分与评论数关系</span>
+            </div>
+            
+            <div class="bg-white rounded-xl p-6 md:p-8 card-shadow">
+                <div class="image-container mb-6">
+                    <img src="https://raw.githubusercontent.com/aptx4869-cmd/ryq/79e6615f757e887744f7dece6b31e4708bf69f5a/djpfpl_pop.png" 
+                         alt="价格、评分与评论数关系" class="rounded-lg">
+                </div>
+                
+                <div class="prose max-w-none">
+                    <div class="stat-item">关键结论：</div>
+                    <ol class="list-decimal pl-5 text-gray-700 space-y-4 mb-6">
+                        <li>
+                            <strong>价格与评论数负相关</strong>：低价书（0-100元）评论数普遍更高（最高超80万），高价书（200元+）评论数少（多数<20万）。<br>
+                            <span class="text-gray-600">原因：低价降低阅读门槛，受众更广。</span>
+                        </li>
+                        <li>
+                            <strong>评分与评论数弱相关</strong>：高评分（9.5+）图书中，低价书评论数高（如《活着》），高价书评论数中等（如《哈利・波特》全集）。<br>
+                            <span class="text-gray-600">说明评论数受价格影响大于评分，优质书需 “低价 + 高质量” 才易成爆款。</span>
+                        </li>
+                        <li>
+                            <strong>高价书的两极分化</strong>：高价书（500元左右）中，少数高评分（9.7）作品靠IP口碑获得关注，但受众窄；多数高价书评论数极低。
+                        </li>
+                    </ol>
+                    
+                    <div class="bg-gray-50 p-4 rounded-lg mt-6">
+                        <h4 class="font-bold text-gray-800 mb-3">相关性系数矩阵</h4>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-100">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">变量</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">价格</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">评分</th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">评论数</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">价格</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">1.00</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">0.12</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">-0.45</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">评分</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">0.12</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">1.00</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">0.23</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">评论数</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">-0.45</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">0.23</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">1.00</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="mt-4 text-sm text-gray-600">
+                            <p>注：相关性系数范围从-1到1，绝对值越接近1表示相关性越强，正负表示正相关或负相关。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 第七部分：结论与建议 -->
+        <section id="conclusion" class="mb-16 scroll-mt-24">
+            <div class="section-title">
+                <i class="fa fa-lightbulb-o mr-3 text-xl"></i>
+                <span>结论与建议</span>
+            </div>
+            
+            <div class="bg-white rounded-xl p-6 md:p-8 card-shadow">
+                <div class="prose max-w-none">
+                    <h3 class="text-xl font-bold text-gray-800 mb-6">核心结论</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                        <div class="bg-blue-50 p-5 rounded-lg border-l-4 border-blue-500">
+                            <h4 class="font-bold text-blue-700 mb-3">读者偏好</h4>
+                            <ul class="list-disc pl-5 text-gray-700 space-y-2">
+                                <li>经典文学作品（如鲁迅、金庸）和热门IP（如《三体》）持续受关注</li>
+                                <li>读者对价格敏感，低价书（30-100元）更易形成讨论热度</li>
+                                <li>高评分（9.0+）图书覆盖领域广泛，反映读者对多类型优质内容的需求</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-green-50 p-5 rounded-lg border-l-4 border-green-500">
+                            <h4 class="font-bold text-green-700 mb-3">市场趋势</h4>
+                            <ul class="list-disc pl-5 text-gray-700 space-y-2">
+                                <li>近年新书占比下降，经典老书热度持续，反映重读价值和经典作品的持久影响力</li>
+                                <li>高价书（200元+）受众有限，但高评分IP高价书仍有市场空间</li>
+                                <li>评论数与传播度强相关，可作为图书营销效果的重要指标</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <h3 class="text-xl font-bold text-gray-800 mb-6">行动建议</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <div class="bg-purple-50 p-5 rounded-lg">
+                            <h4 class="font-bold text-purple-700 mb-3 flex items-center">
+                                <i class="fa fa-bookmark mr-2"></i>出版商策略
+                            </h4>
+                            <ul class="list-disc pl-5 text-gray-700 space-y-2">
+                                <li>保持亲民定价策略，主力产品定价建议在30-100元区间</li>
+                                <li>重视经典作品再版和营销，挖掘其持续价值</li>
+                                <li>高价书需结合强IP和高制作质量，瞄准特定收藏或礼品市场</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-yellow-50 p-5 rounded-lg">
+                            <h4 class="font-bold text-yellow-700 mb-3 flex items-center">
+                                <i class="fa fa-bullhorn mr-2"></i>营销与推广
+                            </h4>
+                            <ul class="list-disc pl-5 text-gray-700 space-y-2">
+                                <li>利用低价+高质量组合打造爆款，重点推广价格敏感型优质图书</li>
+                                <li>评论数与传播度强相关，可将评论数作为营销效果的重要指标</li>
+                                <li>通过社交媒体、读书会等渠道提高读者参与度，增加评论热度</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-red-50 p-5 rounded-lg">
+                            <h4 class="font-bold text-red-700 mb-3 flex items-center">
+                                <i class="fa fa-user mr-2"></i>读者指南
+                            </h4>
+                            <ul class="list-disc pl-5 text-gray-700 space-y-2">
+                                <li>评分高且评论数多的图书（如《活着》《围城》）兼具质量和流行性</li>
+                                <li>高价书需
